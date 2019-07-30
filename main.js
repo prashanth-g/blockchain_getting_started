@@ -1,17 +1,24 @@
 const SHA26 = require('crypto-js/sha256')
 
+class Transaction {
+    constructor(fromAddress, toAddress, amount) {
+        this.fromAddress = fromAddress;
+        this.toAddress = toAddress;
+        this.amount = amount;
+    }
+}
+
 class Block {
-    constructor(index, timestamp, data, previousHash = '') {
-        this.index = index;
+    constructor(timestamp, transactions, previousHash = '') {
         this.timestamp = timestamp;
-        this.data = data;
+        this.transactions = transactions;
         this.previousHash = previousHash;
         this.hash = this.calculateHash();
         this.nonce = 0;
     }
 
     calculateHash() {
-        return SHA26(this.index + this.timestamp + this.previousHash + JSON.stringify(this.data) + this.nonce).toString();
+        return SHA26(this.index + this.timestamp + this.previousHash + JSON.stringify(this.transactions) + this.nonce).toString();
     }
 
     mineBlock(difficulty) {
@@ -28,10 +35,12 @@ class BlockChain {
     constructor() {
         this.chain = [this.createGenesisBlock()];
         this.difficulty = 4;
+        this.pendingTransactions = [];
+        this.miningReward = 100;
     }
 
     createGenesisBlock() {
-        return new Block(0, '28/07/2019', "Genesis block", "0");
+        return new Block('28/07/2019', "Genesis block", "0");
     }
 
     getLatestBlock() {
@@ -42,6 +51,40 @@ class BlockChain {
         newBlock.previousHash = this.getLatestBlock().hash;
         newBlock.mineBlock(this.difficulty);
         this.chain.push(newBlock);
+    }
+
+    minePendingTransactions(miningRewardAddress) {
+        let block = new Block(Date.now(), this.pendingTransactions);
+        block.mineBlock(this.difficulty);
+
+        console.log('Block successfully mined');
+        this.chain.push(block);
+
+        this.pendingTransactions = [
+            new Transaction(null, miningRewardAddress, this.miningReward)
+        ];
+    }
+
+    createTransaction(transaction) {
+        this.pendingTransactions.push(transaction);
+    }
+
+    getBalanceOfAddress(address) {
+        let balance = 0;
+
+        for(const block of this.chain) {
+            for(const trans of block.transactions) {
+                if(trans.fromAddress === address)  {
+                    balance -= trans.amount;
+                }
+
+                if(trans.toAddress === address) {
+                    balance += trans.amount;
+                }
+            }
+        }
+
+        return balance;
     }
 
     isChainValid() {
@@ -64,18 +107,34 @@ class BlockChain {
 
 let blockChain = new BlockChain();
 
-console.log("Mining a block...");
-blockChain.addBlock(new Block(1, '28/07/2019', { amount:7 }));
+// console.log("\nMining a block...");
+// blockChain.addBlock(new Block(1, '28/07/2019', { amount:7 }));
 
-console.log("Mining a block...");
-blockChain.addBlock(new Block(2, '28/07/2019', { amount:10 }));
+// console.log("\nMining a block...");
+// blockChain.addBlock(new Block(2, '28/07/2019', { amount:10 }));
 
-console.log(JSON.stringify(blockChain, null, 5));
-console.log('\nIs blockchian valid: ' + blockChain.isChainValid());
+// console.log(JSON.stringify(blockChain, null, 5));
+// console.log('\nIs blockchian valid: ' + blockChain.isChainValid());
 
-console.log('\nTampering a block...');
-blockChain.chain[1].data = { amount:12 };
+// console.log('\nTampering a block...');
+// blockChain.chain[1].data = { amount:12 };
 
-console.log('\nIs blockchian valid: ' + blockChain.isChainValid());
+// console.log('\nIs blockchian valid: ' + blockChain.isChainValid());
+
+blockChain.createTransaction(new Transaction('address10', 'address11', 100));
+blockChain.createTransaction(new Transaction('address11', 'address10', 50));
+
+console.log('\n Starting the miner');
+
+blockChain.minePendingTransactions('prashanth-g');
+
+console.log('\n Balance of prashanth-g is ', blockChain.getBalanceOfAddress('prashanth-g'));
+
+blockChain.minePendingTransactions('prashanth-g');
+
+console.log('\n Balance of prashanth-g is ', blockChain.getBalanceOfAddress('prashanth-g'));
+
+
+
 
 

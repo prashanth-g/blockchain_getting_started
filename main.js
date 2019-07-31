@@ -107,20 +107,6 @@ class BlockChain {
 
 let blockChain = new BlockChain();
 
-// console.log("\nMining a block...");
-// blockChain.addBlock(new Block(1, '28/07/2019', { amount:7 }));
-
-// console.log("\nMining a block...");
-// blockChain.addBlock(new Block(2, '28/07/2019', { amount:10 }));
-
-// console.log(JSON.stringify(blockChain, null, 5));
-// console.log('\nIs blockchian valid: ' + blockChain.isChainValid());
-
-// console.log('\nTampering a block...');
-// blockChain.chain[1].data = { amount:12 };
-
-// console.log('\nIs blockchian valid: ' + blockChain.isChainValid());
-
 blockChain.createTransaction(new Transaction('address10', 'address11', 100));
 blockChain.createTransaction(new Transaction('address11', 'address10', 50));
 
